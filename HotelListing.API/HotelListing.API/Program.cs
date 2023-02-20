@@ -29,6 +29,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+//!Serilog
+app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 //!Cors
