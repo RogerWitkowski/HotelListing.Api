@@ -55,14 +55,23 @@ namespace HotelListing.API.Controllers
         // PUT: api/Countries/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCountry(int id, Country country)
+        public async Task<IActionResult> PutCountry(int id, UpdateCountryDto updateCountryDto)
         {
-            if (id != country.Id)
+            if (id != updateCountryDto.Id)
             {
                 return BadRequest();
             }
 
-            _dbContext.Entry(country).State = EntityState.Modified;
+            var country = await _dbContext
+                .Countries
+                .FindAsync(id);
+
+            if (country is null)
+            {
+                return NotFound();
+            }
+
+            _mapper.Map(updateCountryDto, country);
 
             try
             {
@@ -86,14 +95,14 @@ namespace HotelListing.API.Controllers
         // POST: api/Countries
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Country>> PostCountry(CreateCountryDto createCountryDto)
+        public async Task<ActionResult<CreateCountryDto>> PostCountry(CreateCountryDto createCountryDto)
         {
             var country = _mapper.Map<Country>(createCountryDto);
 
             _dbContext.Countries.Add(country);
             await _dbContext.SaveChangesAsync();
 
-            return CreatedAtAction("GetCountry", new { id = country.Id }, country);
+            return CreatedAtAction("GetCountry", new { id = country.Id }, createCountryDto);
         }
 
         // DELETE: api/Countries/5
