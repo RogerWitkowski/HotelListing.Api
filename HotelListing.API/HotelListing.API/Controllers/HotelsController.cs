@@ -12,7 +12,7 @@ using HotelListing.API.DtoModels.HotelDto;
 
 namespace HotelListing.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Hotels")]
     [ApiController]
     public class HotelsController : ControllerBase
     {
@@ -36,7 +36,7 @@ namespace HotelListing.API.Controllers
 
         // GET: api/Hotels/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<HotelDto>> GetHotel(int id)
+        public async Task<ActionResult<Hotel>> GetHotel(int id)
         {
             var hotel = await _hotelRepository.GetAsync(id);
 
