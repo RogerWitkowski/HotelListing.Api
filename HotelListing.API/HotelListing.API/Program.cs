@@ -17,9 +17,9 @@ builder.Services.AddDbContext<HotelListingDbContext>(options =>
 });
 
 //! Identity Core
-builder.Services.AddIdentityCore<IdentityUser>()
+builder.Services.AddIdentityCore<ApiUser>()
     .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<HotelListingDbContext>()
+    .AddEntityFrameworkStores<HotelListingDbContext>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
