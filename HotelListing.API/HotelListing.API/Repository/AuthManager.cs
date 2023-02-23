@@ -1,9 +1,13 @@
-﻿using AutoMapper;
+﻿using System.IdentityModel.Tokens.Jwt;
+using AutoMapper;
 using HotelListing.API.Contracts;
 using HotelListing.API.Data;
 using HotelListing.API.DtoModels.UserDto;
 using Microsoft.AspNetCore.Identity;
 using System.Net;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
 
 namespace HotelListing.API.Repository
 {
@@ -11,11 +15,13 @@ namespace HotelListing.API.Repository
     {
         private readonly IMapper _mapper;
         private readonly UserManager<ApiUser> _userManager;
+        private readonly IConfiguration _configuration;
 
-        public AuthManager(IMapper mapper, UserManager<ApiUser> userManager)
+        public AuthManager(IMapper mapper, UserManager<ApiUser> userManager, IConfiguration configuration)
         {
             _mapper = mapper;
             _userManager = userManager;
+            _configuration = configuration;
         }
 
         public async Task<IEnumerable<IdentityError>> Register(ApiUserDto userDto)
@@ -33,33 +39,56 @@ namespace HotelListing.API.Repository
             return result.Errors;
         }
 
-        public async Task<bool> Login(ApiLoginUserDto loginUserDto)
+        public async Task<AuthenticationResponseDto> Login(ApiLoginUserDto loginUserDto)
         {
             var user = await _userManager.FindByEmailAsync(loginUserDto.Email);
-            if (user is null)
+            bool isValidUser = await _userManager.CheckPasswordAsync(user, loginUserDto.Password);
+
+            if (user is null || isValidUser is false)
             {
                 return default;
             }
+            var token = await GenerateToken(user);
 
-            bool isValidCredentials = await _userManager.CheckPasswordAsync(user, loginUserDto.Password);
-
-            if (!isValidCredentials)
+            return new AuthenticationResponseDto
             {
-                return default;
-            }
+                Token = token,
+                UserId = user.Id
+            };
+        }
 
-            return true;
+        private async Task<string> GenerateToken(ApiUser user)
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWTSettings:Key"]));
 
-            //try
-            //{
-            //    var userq = await _userManager.FindByEmailAsync(loginUserDto.Email);
-            //    isValidUser = await _userManager.CheckPasswordAsync(user, loginUserDto.Password);
-            //}
-            //catch (Exception)
-            //{
-            //}
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            //return isValidUser;
+            var role = await _userManager.GetRolesAsync(user);
+
+            var roleClaims = role.Select(x => new Claim(ClaimTypes.Role, x)).ToList();
+
+            var userClaims = await _userManager.GetClaimsAsync(user);
+            var expire = Convert.ToInt32(_configuration["JWTSettings:DurationInMinutes"]);
+
+            var claims = new List<Claim>
+                {
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                    new Claim("UID", user.Id),
+                }
+                .Union(userClaims)
+                .Union(roleClaims);
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["JWTSettings:Issuer"],
+                audience: _configuration["JWTSettings:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(expire),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
