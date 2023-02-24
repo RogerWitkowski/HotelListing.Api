@@ -16,16 +16,18 @@ namespace HotelListing.API.Repository
         private readonly IMapper _mapper;
         private readonly UserManager<ApiUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthManager> _logger;
         private ApiUser _apiUser;
 
         private const string _loginProvider = "HotelListingApi";
         private const string _refreshToken = "RefreshToken";
 
-        public AuthManager(IMapper mapper, UserManager<ApiUser> userManager, IConfiguration configuration)
+        public AuthManager(IMapper mapper, UserManager<ApiUser> userManager, IConfiguration configuration, ILogger<AuthManager> logger)
         {
             _mapper = mapper;
             _userManager = userManager;
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<IdentityError>> Register(ApiUserDto userDto)
@@ -45,14 +47,17 @@ namespace HotelListing.API.Repository
 
         public async Task<AuthenticationResponseDto> Login(ApiLoginUserDto loginUserDto)
         {
+            _logger.LogInformation($"Looking for user with email {loginUserDto.Email}");
             _apiUser = await _userManager.FindByEmailAsync(loginUserDto.Email);
             var isValidUser = await _userManager.CheckPasswordAsync(_apiUser, loginUserDto.Password);
 
             if (_apiUser is null || isValidUser is false)
             {
+                _logger.LogWarning($"User with email {loginUserDto.Email} was not found.");
                 return default;
             }
             var token = await GenerateToken();
+            _logger.LogInformation($"Token generated for user with email {loginUserDto.Email} | Token: {token}");
 
             return new AuthenticationResponseDto
             {
@@ -77,6 +82,7 @@ namespace HotelListing.API.Repository
         public async Task<AuthenticationResponseDto> VerifyRefreshToken(AuthenticationResponseDto request)
         {
             var jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
+
             var tokenContent = jwtSecurityTokenHandler.ReadJwtToken(request.Token);
 
             var userName = tokenContent.Claims.ToList().FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;

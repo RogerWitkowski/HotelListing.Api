@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HotelListing.API.Data;
 using HotelListing.API.DtoModels.CountryDto;
+using HotelListing.API.Exceptions;
+using HotelListing.API.Repository;
 using Microsoft.AspNetCore.Authorization;
 
 namespace HotelListing.API.Controllers
@@ -19,11 +21,13 @@ namespace HotelListing.API.Controllers
     {
         private readonly IMapper _mapper;
         private readonly ICountryRepository _countryRepository;
+        private readonly ILogger<CountriesController> _logger;
 
-        public CountriesController(IMapper mapper, ICountryRepository countryRepository)
+        public CountriesController(IMapper mapper, ICountryRepository countryRepository, ILogger<CountriesController> logger)
         {
             _mapper = mapper;
             _countryRepository = countryRepository;
+            _logger = logger;
         }
 
         // GET: api/Countries
@@ -43,7 +47,7 @@ namespace HotelListing.API.Controllers
 
             if (country == null)
             {
-                return NotFound();
+                throw new NotFoundException(nameof(GetCountry), id);
             }
 
             var countryDetailsDto = _mapper.Map<CountryDetailsDto>(country);
