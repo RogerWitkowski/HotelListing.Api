@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Identity;
 using System.Net;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace HotelListing.API.Repository
