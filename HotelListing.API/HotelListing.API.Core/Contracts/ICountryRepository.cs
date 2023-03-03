@@ -1,8 +1,9 @@
 ﻿using HotelListing.API.Data;
+using HotelListing.API.DtoModels.CountryDto;
 
 namespace HotelListing.API.Contracts;
 
 public interface ICountryRepository : IGenericRepository<Country>
 {
-    Task<Country> GetDetailsAsync(int id);
+    Task<CountryDetailsDto> GetDetailsAsync(int id);
 }
