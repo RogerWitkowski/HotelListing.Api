@@ -21,11 +21,6 @@ namespace HotelListing.API.Repository
 
         public async Task<CountryDetailsDto> GetDetailsAsync(int id)
         {
-            //return await _dbContext
-            //    .Countries
-            //    .Include(h => h.Hotels)
-            //    .FirstOrDefaultAsync(c => c.Id == id);
-
             var country = await _dbContext
                 .Countries
                 .Include(q => q.Hotels)

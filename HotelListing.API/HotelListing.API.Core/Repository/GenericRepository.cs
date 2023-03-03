@@ -95,12 +95,6 @@ namespace HotelListing.API.Repository
         public async Task UpdateAsync<TSource>(int id, TSource source)
         {
             var entity = await GetAsync(id);
-
-            //if (entity is null)
-            //{
-            //    throw new NotFoundException(typeof(T).Name, id);
-            //}
-
             _mapper.Map(source, entity);
             _dbContext.Update(entity);
             await _dbContext.SaveChangesAsync();
@@ -109,10 +103,6 @@ namespace HotelListing.API.Repository
         public async Task DeleteAsync(int id)
         {
             var entity = await GetAsync(id);
-            //if (entity == null)
-            //{
-            //    throw new NotFoundException(typeof(T).Name, id);
-            //}
             _dbContext.Set<T>().Remove(entity);
             await _dbContext.SaveChangesAsync();
         }
