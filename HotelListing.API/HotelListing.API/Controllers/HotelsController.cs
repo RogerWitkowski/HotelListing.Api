@@ -20,11 +20,11 @@ namespace HotelListing.API.Controllers
             _hotelRepository = hotelRepository;
         }
 
-        // GET: api/Hotels
-        [HttpGet]
+        //GET: api/Hotels
+        [HttpGet("get-all")]
         public async Task<ActionResult<IEnumerable<HotelDto>>> GetHotels()
         {
-            var hotels = await _hotelRepository.GetAllAsync<List<HotelDto>>();
+            var hotels = await _hotelRepository.GetAllAsync<HotelDto>();
             return Ok(hotels);
         }
 
